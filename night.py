@@ -91,30 +91,30 @@ class ColorManager:
         self._get_color_obj().Temperature = value
 
 
-@click.group()
+@click.group(help="Simple tool to manage color temperature")
 def main():
     pass
 
 
-@main.command("get")
+@main.command("get", help="Print current color temperature")
 def get_color():
     color = ColorManager().get_color()
     print(color)
 
 
-@main.command("set")
-@click.option("--temp", type=int, help="Temperature from 1000 to 10000 (Kelvins)")
+@main.command("set", help="Set color temperature from 1000 to 10000 (Kelvins)")
+@click.argument("temp", type=int)
 def set_color(temp):
     ColorManager().set_color(temp)
 
 
-@main.command("reset")
+@main.command("reset", help=f"Reset color temperature to {NORMAL_LEVEL}")
 def reset_color():
     ColorManager().set_color(NORMAL_LEVEL)
 
 
-@main.command("rotate")
-def rotate():
+@main.command("loop", help=f"Change temperature in loop of {LEVEL_COUNT} levels")
+def loop():
     color_manager = ColorManager()
     temp = color_manager.get_color()
 
@@ -122,11 +122,14 @@ def rotate():
 
     for level, new_level in zip(levels, levels[1:] + levels[:1]):
         if temp >= level:
-            icon = EIcon.sunset
             break
     else:
         new_level = levels[0]
+
+    if new_level >= temp:
         icon = EIcon.sunrise
+    else:
+        icon = EIcon.sunset
 
     color_manager.set_color(new_level)
     Notifier().send_notify(icon, DLevel(0, NORMAL_LEVEL, 8000, new_level), f"{new_level}K")
